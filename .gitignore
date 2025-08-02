@@ -19,3 +19,4 @@ __pycache__/
 testing.py
 chroma_db/
 testing_query_results.txt
+chatpdf.db
