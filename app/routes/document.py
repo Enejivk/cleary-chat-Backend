@@ -49,7 +49,6 @@ def handle_pdf_upload(files, user_id, db, background_tasks) -> list:
 
     db.commit()
     return results
-
 # --- Endpoints ---
 
 @router.post("/upload")
@@ -80,9 +79,11 @@ async def get_documents(
     documents = db.query(Document).filter(Document.user_id == user_id).all()
     return [{"id": doc.id, "filename": doc.filename, "filepath": doc.filepath} for doc in documents]
 
+
 class ChatWithDocument(BaseModel):
     query: str
     collection_name: str
+
 
 @router.post("/chat_with_document")
 async def chat_with_document(
@@ -106,6 +107,8 @@ async def chat_with_document(
     
     return response
 
+
+
 @router.get("/list_collections")
 def list_collections():
     """
@@ -114,6 +117,7 @@ def list_collections():
     """
     collections = precess_pdf.list_collections()
     return [collection.name for collection in collections]
+
 
 @router.post("/create_chatbot")
 async def create_chatbot(
@@ -159,15 +163,20 @@ async def create_chatbot(
     db.refresh(chatbot)
 
     return {
-        "id": chatbot.id,
-        "user_id": chatbot.user_id,
-        "name": chatbot.name,
-        "system_prompt": chatbot.system_prompt,
-        "welcome_message": chatbot.welcome_message,
-        "theme": chatbot.theme,
-        "primary_color": chatbot.primary_color,
-        "document_ids": [doc.id for doc in chatbot.documents],
+            "id": chatbot.id,
+            "name": chatbot.name,
+            "systemPrompt": chatbot.system_prompt,
+            "welcomeMessage": chatbot.welcome_message,
+            "theme": chatbot.theme,
+            "primaryColor": chatbot.primary_color,
+            "documentIds": [doc.id for doc in chatbot.documents],
+            "message": "Chatbot updated successfully",
+            
+            "createdAt": chatbot.created_at.isoformat(),
+            "lasttrained": chatbot.last_trained.isoformat() if chatbot.last_trained else None,
+            "updatedAt": chatbot.updated_at.isoformat(),
     }
+    
     
 @router.get("/get_chatbots")
 async def get_chatbots(
@@ -178,19 +187,24 @@ async def get_chatbots(
     Retrieve all chatbot configurations belonging to the current user.
     """
     chatbots = db.query(ChatBot).filter(ChatBot.user_id == user_id).all()
+    
     return [
         {
             "id": chatbot.id,
-            "user_id": chatbot.user_id,
             "name": chatbot.name,
-            "system_prompt": chatbot.system_prompt,
-            "welcome_message": chatbot.welcome_message,
+            "systemPrompt": chatbot.system_prompt,
+            "welcomeMessage": chatbot.welcome_message,
             "theme": chatbot.theme,
-            "primary_color": chatbot.primary_color,
-            "document_ids": [doc.id for doc in chatbot.documents],
+            "primaryColor": chatbot.primary_color,
+            "documentIds": [doc.id for doc in chatbot.documents],
+            "message": "Chatbot updated successfully",
+            "createdAt": chatbot.created_at.isoformat(),
+            "lasttrained": chatbot.last_trained.isoformat() if chatbot.last_trained else None,
+            "updatedAt": chatbot.updated_at.isoformat(),
         }
         for chatbot in chatbots
     ]
+
 
 @router.post("/chatbot/{chatbot_id}/add_documents")
 async def add_documents_to_chatbot(
@@ -281,6 +295,7 @@ async def update_chatbot(
         "primaryColor": chatbot.primary_color,
         "documentIds": [doc.id for doc in chatbot.documents],
         "message": "Chatbot updated successfully",
+        
         "createdAt": chatbot.created_at.isoformat(),
         "lasttrained": chatbot.last_trained.isoformat() if chatbot.last_trained else None,
         "updatedAt": chatbot.updated_at.isoformat(),
