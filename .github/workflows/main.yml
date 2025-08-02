@@ -23,5 +23,5 @@ jobs:
         ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
           cd ~/cleary-chat-Backend
           git pull origin main
-          sudo supervisorctl restart uvicorn
+          sudo supervisorctl restart uvicorn:fastapi-uvicorn-00
         EOF
