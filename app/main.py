@@ -3,6 +3,10 @@ from app.db.base import Base
 from app.db.session import engine
 from app.routes.user import router as user_router
 from app.routes.document import router as document_router
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from app.db.session import get_db
+from app.models.models import User
 
 
 
@@ -31,6 +35,11 @@ def reset_database():
         Base.metadata.create_all(bind=engine, tables=[table for table in Base.metadata.sorted_tables if table.name in tables_to_drop])
     return {"status": "Database reset successfully (except users table)."}
 
+
+@app.get("/users", tags=["users"])
+def get_all_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return users
 
 
 @app.get("/")
