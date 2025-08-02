@@ -274,12 +274,14 @@ async def update_chatbot(
 
     return {
         "id": chatbot.id,
-        "user_id": chatbot.user_id,
         "name": chatbot.name,
-        "system_prompt": chatbot.system_prompt,
-        "welcome_message": chatbot.welcome_message,
+        "systemPrompt": chatbot.system_prompt,
+        "welcomeMessage": chatbot.welcome_message,
         "theme": chatbot.theme,
-        "primary_color": chatbot.primary_color,
-        "document_ids": [doc.id for doc in chatbot.documents],
-        "message": "Chatbot updated successfully"
+        "primaryColor": chatbot.primary_color,
+        "documentIds": [doc.id for doc in chatbot.documents],
+        "message": "Chatbot updated successfully",
+        "createdAt": chatbot.created_at.isoformat(),
+        "lasttrained": chatbot.last_trained.isoformat() if chatbot.last_trained else None,
+        "updatedAt": chatbot.updated_at.isoformat(),
     }
