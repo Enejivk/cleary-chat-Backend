@@ -1,14 +1,21 @@
-# Ignore everything
-*
-
-# Ignore all directories
-*/
-
-# Whitelist files and folders to keep
-!.gitignore
-!README.md
-!run.py
-
-!app/*
-!tests/
-chroma_db/*
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+.venv/
+.env
+*.env
+*.DS_Store
+*.log
+*.sqlite3
+*.db
+*.bak
+*.swp
+*.tmp
+*.pid
+*.coverage
+*.mypy_cache/
+testing.py
+chroma_db/
+testing_query_results.txt
