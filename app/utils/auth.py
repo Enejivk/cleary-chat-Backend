@@ -53,7 +53,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 async def get_current_user(
-    # token: Annotated[str, Depends(oauth2_scheme)]
+    token: Annotated[str, Depends(oauth2_scheme)]
 ) -> dict:
     return UUID("d1a23d18-4187-4b71-a548-0349a0d479a9")
     credentials_exception = HTTPException(
