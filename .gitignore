@@ -1,0 +1,14 @@
+# Ignore everything
+*
+
+# Ignore all directories
+*/
+
+# Whitelist files and folders to keep
+!.gitignore
+!README.md
+!run.py
+
+!app/
+!tests/
+chroma_db/*
