@@ -9,6 +9,6 @@
 !README.md
 !run.py
 
-!app/
+!app/*
 !tests/
 chroma_db/*
