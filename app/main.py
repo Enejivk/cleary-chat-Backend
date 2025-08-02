@@ -18,12 +18,18 @@ app.include_router(document_router, prefix="/chatbots", tags=["chatbots"])
 @app.delete("/reset")
 def reset_database():
     """
-    Reset the database by dropping and recreating all tables.
-    Useful for development/testing purposes.
+    Reset the database by dropping all tables except the users table,
+    then recreating the dropped tables.
     """
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    return {"status": "Database reset successfully."}
+    # Get all table names except 'users'
+    tables_to_drop = [table.name for table in Base.metadata.sorted_tables if table.name != "users"]
+    # Drop all tables except 'users'
+    if tables_to_drop:
+        Base.metadata.drop_all(bind=engine, tables=[table for table in Base.metadata.sorted_tables if table.name in tables_to_drop])
+    # Recreate the dropped tables
+    if tables_to_drop:
+        Base.metadata.create_all(bind=engine, tables=[table for table in Base.metadata.sorted_tables if table.name in tables_to_drop])
+    return {"status": "Database reset successfully (except users table)."}
 
 
 
