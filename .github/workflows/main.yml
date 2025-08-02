@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Deploy via SSH
       uses: appleboy/ssh-action@v1.0.0
@@ -22,5 +22,4 @@ jobs:
         script: |
           cd ~/cleary-chat-Backend
           git pull origin main
-          source venv/bin/activate
-          sudo supervisorctl restart cleary-chat
+          sudo supervisorctl restart uvicorn
