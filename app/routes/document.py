@@ -300,3 +300,23 @@ async def update_chatbot(
         "lasttrained": chatbot.last_trained.isoformat() if chatbot.last_trained else None,
         "updatedAt": chatbot.updated_at.isoformat(),
     }
+
+
+@router.get("/all_user_documents")
+async def all_user_documents(
+    user_id: Annotated[str, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieve all documents belonging to the current user.
+    """
+    documents = db.query(Document).filter(Document.user_id == user_id).all()
+    return [
+        {
+            "id": doc.id,
+            "filename": doc.filename,
+            "filepath": doc.filepath,
+            "created_at": doc.created_at.isoformat() if hasattr(doc, "created_at") and doc.created_at else None,
+        }
+        for doc in documents
+    ]
