@@ -27,6 +27,7 @@ def handle_pdf_upload(files, user_id, db, background_tasks) -> list:
         
         # Store PDF to cloud/local storage
         file_url = save_pdf.concurrent_upload(file.file, file.filename, file.content_type, user_id)
+        file_type_simple = file.content_type.split("/")[-1] if "/" in file.content_type else file.content_type
 
         # Persist document metadata
         doc = Document(
@@ -34,6 +35,7 @@ def handle_pdf_upload(files, user_id, db, background_tasks) -> list:
             user_id=user_id,
             filename=file.filename,
             filepath=file_url,
+            file_type=file_type_simple,
         )
         
         # Schedule background task for further processing (e.g., embedding)
@@ -45,7 +47,14 @@ def handle_pdf_upload(files, user_id, db, background_tasks) -> list:
         )
         
         db.add(doc)
-        results.append({"document_id": doc.id, "file_url": file_url, "filename": file.filename})
+        # Extract only the subtype from the content type (e.g., "pdf" from "application/pdf")
+        
+        results.append({
+            "document_id": doc.id,
+            "file_url": file_url,
+            "filename": file.filename,
+            "type": file_type_simple,
+        })
 
     db.commit()
     return results
@@ -316,7 +325,8 @@ async def all_user_documents(
             "id": doc.id,
             "filename": doc.filename,
             "filepath": doc.filepath,
-            "created_at": doc.created_at.isoformat() if hasattr(doc, "created_at") and doc.created_at else None,
+            "Type": doc.file_type,
+            "createdAt": doc.created_at.isoformat() if hasattr(doc, "created_at") and doc.created_at else None,
         }
         for doc in documents
     ]

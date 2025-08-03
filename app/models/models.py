@@ -39,6 +39,7 @@ class Document(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     filename = Column(String, nullable=False)
     filepath = Column(String, nullable=False)
+    file_type = Column(String, nullable=False)
     uploaded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="documents")
