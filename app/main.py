@@ -7,8 +7,22 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.models import User
+from fastapi.middleware.cors import CORSMiddleware
 
+# Add CORS middleware to allow frontend at http://localhost:5173
+origins = [
+    "http://localhost:5173",
+]
 
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app = FastAPI()
 
