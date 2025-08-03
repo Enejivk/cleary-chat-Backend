@@ -302,7 +302,7 @@ async def update_chatbot(
     }
 
 
-@router.get("/all_user_documents")
+@router.get("/get_all_documents")
 async def all_user_documents(
     user_id: Annotated[str, Depends(get_current_user)],
     db: Session = Depends(get_db),
