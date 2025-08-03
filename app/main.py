@@ -14,8 +14,8 @@ origins = [
     "http://localhost:5173",
 ]
 
-app = FastAPI()
 
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -23,8 +23,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app = FastAPI()
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
