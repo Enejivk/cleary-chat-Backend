@@ -406,9 +406,9 @@ async def get_messages_by_chatbot(
     return [
         {
             "id": message.id,
-            "chatbot_id": message.chatbot_id,
+            "sender": message.sender, 
             "content": message.text,
-            "createdAt": message.created_at.isoformat() if hasattr(message, "created_at") and message.created_at else None,
+            "timestamp": message.created_at.isoformat() if hasattr(message, "created_at") and message.created_at else None,
         }
         for message in messages
     ]
