@@ -60,6 +60,7 @@ def handle_pdf_upload(files, user_id, db, background_tasks) -> list:
     return results
 # --- Endpoints ---
 
+
 @router.post("/upload")
 async def upload_pdf(
     user_id: Annotated[str, Depends(get_current_user)],

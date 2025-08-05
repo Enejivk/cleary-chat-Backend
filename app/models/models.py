@@ -29,6 +29,7 @@ class User(Base):
 
     documents = relationship("Document", back_populates="user", cascade="all, delete-orphan")
     chatbots = relationship("ChatBot", back_populates="user", cascade="all, delete-orphan")
+    chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
 
 
 # ----------------------- Document Model -----------------------
@@ -43,7 +44,6 @@ class Document(Base):
     uploaded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="documents")
-    chats = relationship("ChatMessage", back_populates="document", cascade="all, delete-orphan")
     chatbots = relationship("ChatBot", secondary=chatbot_document_association, back_populates="documents")
 
 
@@ -52,12 +52,11 @@ class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    document_id = Column(String, ForeignKey("documents.id"))
     question = Column(Text, nullable=False)
     answer = Column(Text, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
-    document = relationship("Document", back_populates="chats")
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    chatbot_id = Column(String, ForeignKey("chat_bots.id"), nullable=True)
 
 
 # ----------------------- ChatBot Model -----------------------

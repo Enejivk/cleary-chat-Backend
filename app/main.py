@@ -48,6 +48,18 @@ def reset_database():
     return {"status": "Database reset successfully (except users table)."}
 
 
+@app.delete("/reset/all")
+def reset_all_database():
+    """
+    Reset the database by dropping all tables including the users table,
+    then recreating all tables.
+    """
+    # Drop all tables
+    Base.metadata.drop_all(bind=engine)
+    # Recreate all tables
+    Base.metadata.create_all(bind=engine)
+    return {"status": "Database fully reset (all tables dropped and recreated)."}
+
 @app.get("/users", tags=["users"])
 def get_all_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
