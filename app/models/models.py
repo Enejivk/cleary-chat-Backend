@@ -52,8 +52,8 @@ class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    question = Column(Text, nullable=False)
-    answer = Column(Text, nullable=False)
+    text = Column(Text, nullable=False)
+    sender = Column(Text, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     chatbot_id = Column(String, ForeignKey("chat_bots.id"), nullable=True)

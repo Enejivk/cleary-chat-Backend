@@ -1,9 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks, Form
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.models.models import Document, ChatBot
-from app.utils.auth import get_current_user
-from app.utils.process_pdf import precess_pdf, save_pdf
+from app.models.models import Document, ChatBot, ChatMessage
+from app.utils import precess_pdf, save_pdf, get_current_user
 from typing import Annotated
 from pydantic import BaseModel
 import uuid
@@ -58,6 +57,22 @@ def handle_pdf_upload(files, user_id, db, background_tasks) -> list:
 
     db.commit()
     return results
+
+def save_chat_message(user_id: str, chatbot_id: str, content: str, sender: str, db: Session):
+    """
+    Saves a chat message to the database.
+    """
+    
+    message = ChatMessage(
+        id=str(uuid.uuid4()),
+        user_id=user_id,
+        chatbot_id=chatbot_id,
+        text=content,
+        sender=sender
+    )
+    
+    db.add(message)
+    db.commit()
 # --- Endpoints ---
 
 
@@ -92,23 +107,36 @@ async def get_documents(
 
 class ChatWithDocument(BaseModel):
     query: str
-    documentId: list[str]
+    document_id: list[str]
     messageHistory: list[dict] = []
+    chatbot_id: str
 
 @router.post("/chat")
 async def chat_with_document(
+    background_tasks: BackgroundTasks,
     user_id: Annotated[str, Depends(get_current_user)],
     chat_data: ChatWithDocument,
+    db: Session = Depends(get_db),  # <-- add db here
 ):
     """
     Query a document collection and get AI-generated response based on user input.
     """
+    
+    background_tasks.add_task(
+        save_chat_message,
+        user_id=user_id,
+        chatbot_id=chat_data.chatbot_id,
+        content=chat_data.query,
+        sender="user",
+        db=db
+    )
+    
     context = precess_pdf.query_collection(
         query=chat_data.query,
         filter={
             "$and": [
                 {"user_id": {"$eq": str(user_id)}},
-                {"id": {"$in": chat_data.documentId}}
+                {"id": {"$in": chat_data.document_id}}
             ]
         }
     )
@@ -119,6 +147,14 @@ async def chat_with_document(
         message_history=chat_data.messageHistory
     )
     
+    background_tasks.add_task(
+        save_chat_message,
+        user_id=user_id,
+        chatbot_id=chat_data.chatbot_id,
+        content=response,
+        sender="bot",
+        db=db  
+    )
     return response
 
 
@@ -334,3 +370,63 @@ async def all_user_documents(
         }
         for doc in documents
     ]
+
+@router.get("/get_all_messages")
+async def get_all_messages(
+    user_id: Annotated[str, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieve all messages belonging to the current user.
+    """
+    messages = db.query(ChatMessage).filter(ChatMessage.user_id == user_id).all()
+    return [
+        {
+            "id": message.id,
+            "chatbot_id": message.chatbot_id,
+            "content": message.text,
+            "createdAt": message.created_at.isoformat() if hasattr(message, "created_at") and message.created_at else None,
+        }
+        for message in messages
+    ]
+    
+@router.get("/chatbot/{chatbot_id}/messages")
+async def get_messages_by_chatbot(
+    chatbot_id: str,
+    user_id: Annotated[str, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieve all messages for a specific chatbot belonging to the current user.
+    """
+    messages = db.query(ChatMessage).filter(
+        ChatMessage.user_id == user_id,
+        ChatMessage.chatbot_id == chatbot_id
+    ).all()
+    return [
+        {
+            "id": message.id,
+            "chatbot_id": message.chatbot_id,
+            "content": message.text,
+            "createdAt": message.created_at.isoformat() if hasattr(message, "created_at") and message.created_at else None,
+        }
+        for message in messages
+    ]
+
+@router.delete("/chatbot/{chatbot_id}/clear_user_chat")
+async def clear_user_chat_for_chatbot(
+    chatbot_id: str,
+    user_id: Annotated[str, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+):
+    """
+    Delete all chat messages for a specific chatbot belonging to the current user.
+    """
+    messages = db.query(ChatMessage).filter(
+        ChatMessage.user_id == user_id,
+        ChatMessage.chatbot_id == chatbot_id
+    ).all()
+    for message in messages:
+        db.delete(message)
+    db.commit()
+    return {"message": "All chat messages for this chatbot have been deleted."}

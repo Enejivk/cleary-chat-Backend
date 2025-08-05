@@ -111,15 +111,15 @@ class AWSHelper:
         """Upload a file to S3 and return the file URL."""
         unique_filename = f"{user_id}/{filename}"
 
-        self.s3_client.upload_fileobj(
-            Fileobj=file_stream,
-            Bucket=self.s3_bucket_name,
-            Key=unique_filename,
-            ExtraArgs={
-                "ContentType": content_type,
-                "ACL": "public-read"
-            }
-        )
+        # self.s3_client.upload_fileobj(
+        #     Fileobj=file_stream,
+        #     Bucket=self.s3_bucket_name,
+        #     Key=unique_filename,
+        #     ExtraArgs={
+        #         "ContentType": content_type,
+        #         "ACL": "public-read"
+        #     }
+        # )
         file_url = f"https://{self.s3_bucket_name}.s3.{self.aws_region}.amazonaws.com/{unique_filename}"
         return file_url
     
