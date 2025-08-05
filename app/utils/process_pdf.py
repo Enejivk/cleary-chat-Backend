@@ -26,24 +26,25 @@ class HandleChromadb:
             max_tokens=None
             )
         self.system_prompt = system_prompt
+        self.collection_name = "documents"
     
     
-    def get_or_create_collection(self, collection_name: str):
+    def get_or_create_collection(self):
         """Create a new collection in the ChromaDB."""
         collection = self.client.get_or_create_collection(
-            name=collection_name,
+            name=self.collection_name,
             embedding_function=self.embedings_function
         )
         print(f"New collection created: {collection.name}")
         return collection
 
 
-    def save_vector(self, collection_name: str, vector: list, metadata: dict):
+    def save_vector(self, vector: list, metadata: dict):
         """Save a vector to a specific collection."""
-        print(f"Saving vector to collection: {collection_name}")
-        
+        print(f"Saving vector to collection: {self.collection_name}")
+
         collection = self.client.get_or_create_collection(
-            name=collection_name,
+            name=self.collection_name,
             embedding_function=self.embedings_function
         )
         
@@ -55,17 +56,16 @@ class HandleChromadb:
             metadatas=metadatas,
             ids=ids
         )
-        print(f"Vector added to collection {collection_name}.")
-    
-    
+        print(f"Vector added to collection {self.collection_name}.")
+
     def list_collections(self):
         """List all collections in the ChromaDB."""
         return self.client.list_collections()
     
     
-    def query_collection(self, collection_name: str, query: str, filter: dict = None):
+    def query_collection(self, query: str, filter: dict = None):
         """Query a specific collection."""
-        collection = self.client.get_collection(name=collection_name, embedding_function=self.embedings_function)
+        collection = self.client.get_collection(name=self.collection_name, embedding_function=self.embedings_function)
         results = collection.query(
             query_texts=[query],
             n_results=13,
@@ -73,6 +73,7 @@ class HandleChromadb:
             include=["documents", "metadatas"]
         )
         
+        print(results['metadatas'])
         return results['documents']
         
     
@@ -157,27 +158,26 @@ class ProcessPdfDocument(HandleChromadb):
         self.splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 
 
-    def split_text_into_chunks(self, text: str, collection_name: str, metadata: dict = None):
+    def split_text_into_chunks(self, text: str, metadata: dict = None):
         
-        print(f"Splitting text into chunks for collection: {collection_name}")
+        print(f"Splitting text into chunks for collection: {self.collection_name}")
         chunks = self.splitter.split_text(text)
         
-        self.get_or_create_collection(collection_name=collection_name)
+        self.get_or_create_collection()
         
         self.save_vector(
-            collection_name=collection_name,
             vector=chunks,
             metadata=metadata
         )
 
 
-    def load_pdf(self, file_path: str, collection_name: str, metadata: dict = None):
+    def load_pdf(self, file_path: str, metadata: dict = None):
         try:
             # Load the PDF file using PyPDFLoader
             loader = PyPDFLoader(file_path)
             for page in loader.load():
                 print(page.page_content)
-                self.split_text_into_chunks(page.page_content, collection_name, metadata)
+                self.split_text_into_chunks(page.page_content, metadata)
                 
         except Exception as e:
             
@@ -196,7 +196,6 @@ class ProcessPdfDocument(HandleChromadb):
         
         self.load_pdf(
             file_path=os.path.join(str_user_id, file_name),
-            collection_name="documents",
             metadata={"source": file_name, "user_id": str_user_id, "id": file_id}
         )
 
@@ -205,14 +204,17 @@ save_pdf = SaveToAws()
 
 if __name__ == "__main__":
     
-    user_id = "86a974d0-92a6-46da-9b3c-b9231eb21cf8"
+    user_id = "dce575c7-cc61-4f9c-95f0-8f7eea4fd86e"
     
     process_pdf = ProcessPdfDocument()
     context = process_pdf.query_collection(
-        collection_name="documents",
         query="what is the summary of the pdf content",
         filter={
-        "user_id": {"$eq": str(user_id)}}
+        "$and": [
+            {"user_id": {"$eq": user_id}},
+            {"id": {"$in": ["3f15ea0d-6505-4b55-9e8e-d6f26d07fb5a", "f104c2a8-b147-4508-8e78-fc8f421d1108", "b185caa6-5b8f-43f0-83c6-288fc83cd5a4"]}}
+        ]
+        }
     )
     
     message_history = [

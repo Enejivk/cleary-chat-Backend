@@ -91,10 +91,10 @@ async def get_documents(
 
 class ChatWithDocument(BaseModel):
     query: str
-    collection_name: str
+    documentId: list[str]
+    messageHistory: list[dict] = []
 
-
-@router.post("/chat_with_document")
+@router.post("/chat")
 async def chat_with_document(
     user_id: Annotated[str, Depends(get_current_user)],
     chat_data: ChatWithDocument,
@@ -103,19 +103,22 @@ async def chat_with_document(
     Query a document collection and get AI-generated response based on user input.
     """
     context = precess_pdf.query_collection(
-        collection_name=chat_data.collection_name,
         query=chat_data.query,
-        filter={"$and": [{"source": "pdf"}, {"user_id": str(user_id)}]},
+        filter={
+            "$and": [
+                {"user_id": {"$eq": str(user_id)}},
+                {"id": {"$in": chat_data.documentId}}
+            ]
+        }
     )
     
     response = precess_pdf.get_ai_response(
         query=chat_data.query,
         context=context,
-        message_history=None
+        message_history=chat_data.messageHistory
     )
     
     return response
-
 
 
 @router.get("/list_collections")
