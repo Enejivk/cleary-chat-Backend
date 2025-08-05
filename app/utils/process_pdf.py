@@ -101,7 +101,7 @@ class HandleChromadb:
         return response.content.strip()
         
         
-class SaveToAws:
+class AWSHelper:
     def __init__(self):
         self.s3_bucket_name = current_config.S3_BUCKET_NAME
         self.aws_region = current_config.AWS_REGION
@@ -122,7 +122,25 @@ class SaveToAws:
         )
         file_url = f"https://{self.s3_bucket_name}.s3.{self.aws_region}.amazonaws.com/{unique_filename}"
         return file_url
+    
+    def remove_user_documents(self, user_id: str):
+        """Remove all documents for a user from the S3 bucket."""
+        prefix = f"{user_id}/"
+        paginator = self.s3_client.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=self.s3_bucket_name, Prefix=prefix)
 
+        keys_to_delete = []
+        for page in pages:
+            for obj in page.get('Contents', []):
+                keys_to_delete.append({'Key': obj['Key']})
+
+        if keys_to_delete:
+            # S3 delete_objects can delete up to 1000 objects at a time
+            for i in range(0, len(keys_to_delete), 1000):
+                self.s3_client.delete_objects(
+                    Bucket=self.s3_bucket_name,
+                    Delete={'Objects': keys_to_delete[i:i+1000]}
+                )
 
     def save_to_local(self, file_stream, filename: str, user_id: str = None):
         """Save a file locally."""
@@ -200,7 +218,7 @@ class ProcessPdfDocument(HandleChromadb):
         )
 
 precess_pdf = ProcessPdfDocument()
-save_pdf = SaveToAws()
+save_pdf = AWSHelper()
 
 if __name__ == "__main__":
     

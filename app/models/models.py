@@ -58,6 +58,8 @@ class ChatMessage(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     chatbot_id = Column(String, ForeignKey("chat_bots.id"), nullable=True)
 
+    user = relationship("User", back_populates="chat_messages")
+    chatbot = relationship("ChatBot", backref="chat_messages")
 
 # ----------------------- ChatBot Model -----------------------
 class ChatBot(Base):
