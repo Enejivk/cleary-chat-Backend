@@ -55,7 +55,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 async def get_current_user(
     # token: Annotated[str, Depends(oauth2_scheme)]
 ) -> dict:
-    return UUID("dce575c7-cc61-4f9c-95f0-8f7eea4fd86e")
+    return UUID("946cc9ce-4fc0-4a32-bf27-62287f31b995")
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
